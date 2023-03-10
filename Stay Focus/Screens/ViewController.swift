@@ -1,7 +1,7 @@
 // GITHUB BAK
 // YAPILACAKLAR KONTROL ET
 // 1-) Mola suresinde dakikalar saniyenin 00'i ile eslestiginde tek basamak olarak gozukuyor. Cift basamak olmali. (ACILIYETI YOK AMA UNUTMA)
-// 2-) Mola bittiginde tekrardan FOCUS TIME baslatilmali ve bunun kontrolu COUNTER ile yapilmali. Counter 4e ulastiginda uygulama sonlanacak.
+//!!!!! 2-) Sayac calisiyor fakat 1. dongu bittikten sonra istedigimiz sureye gecmiyor. DUZELT !!!  ONEMLI
 // 3-) Sure bittikten sonra tekrar baslatirsak. 24 yerine 25'ten basliyor. Duzeltilmesi lazim.
 
 //  ViewController.swift
@@ -22,12 +22,14 @@ class ViewController: UIViewController {
     let pauseButton = SFActionButton()
     let stopButton = SFActionButton()
     
-    var focusMinutesLabel = SFTimeLabel(text: "01")
+    var focusMinutesLabel = SFTimeLabel(text: "25")
     let secondsLabel = SFTimeLabel(text: "00")
     
     var shortMinutesLabel = SFTimeLabel(text: "05")
     
     var pauseMu:Bool = true
+    
+    var counter:Int = 0
     
     let focusView = SFView(text: "Focus")
     let breakView = SFView(text: "Break")
@@ -39,7 +41,6 @@ class ViewController: UIViewController {
         pauseButton.isHidden = true
         stopButton.isHidden = true
         shortMinutesLabel.isHidden = true
-//        longMinutesLabel.isHidden = true
         
         breakView.isHidden = true
         
@@ -67,7 +68,6 @@ class ViewController: UIViewController {
         rootVC.callBackForSomething = { value in
             self.focusMinutesLabel.text = "\(Int(value.focusTime))"
             self.shortMinutesLabel.text = "\(Int(value.shortBreakTime))"
-//            self.longMinutesLabel.text  = "\(Int(value.longBreakTime))"
         }
         let navVC = UINavigationController(rootViewController: rootVC)
         navVC.modalPresentationStyle = .fullScreen
@@ -78,9 +78,10 @@ class ViewController: UIViewController {
     @objc func startButtonActions(){
         print("Start butonu calisti.")
         
+        print("Counter : \(counter)")
+        
         print("Focus Time       : \(focusMinutesLabel.text!)")
         print("Short Break Time : \(shortMinutesLabel.text!)")
-//        print("Long Break Time  : \(longMinutesLabel.text!)")
         
         startButton.isHidden = true
         pauseButton.isHidden = false
@@ -88,36 +89,22 @@ class ViewController: UIViewController {
         
         let minutesTimeValue = Int(focusMinutesLabel.text!)!
         focusMinutesLabel.text = String(minutesTimeValue - 1)
-        secondsLabel.text = "59"
+        secondsLabel.text = "09"
         
         //MARK: - Seconds Label Work Method
         secondsTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(secondsTimerStart), userInfo: nil, repeats: true)
         
         //MARK: - Focus Minutes Label Work Method
-        focusMinutesTimer = Timer.scheduledTimer(timeInterval: 60, target: self, selector: #selector(focusMinutesTimerStart), userInfo: nil, repeats: true)
+        focusMinutesTimer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(focusMinutesTimerStart), userInfo: nil, repeats: true)
         
         //MARK: - Break Minutes Label Work Method
-        shortMinutesTimer = Timer.scheduledTimer(timeInterval: 60, target: self, selector: #selector(shortMinutesTimerStart), userInfo: nil, repeats: true)
-    }
-    
-    //MARK: - Short Minutes Timer Set
-    @objc func shortMinutesTimerStart(){
-        var shortTimeValue = Int(shortMinutesLabel.text!)!
-        secondsLabel.text = "59"
-        shortMinutesLabel.text = String(shortTimeValue)
-        shortTimeValue -= 1
-        shortMinutesLabel.text = String(shortTimeValue)
-        
-        if ( shortTimeValue < 10){
-            shortMinutesLabel.text = "0\(shortTimeValue)"
-            if shortTimeValue == -1 {
-                shortMinutesLabel.text = "59"
-            }
-        }
+        shortMinutesTimer = Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(shortMinutesTimerStart), userInfo: nil, repeats: true)
     }
     
     //MARK: - Focus Minutes Timer Set
     @objc func focusMinutesTimerStart(){
+        focusMinutesLabel.isHidden = false
+        shortMinutesLabel.isHidden = true
         var focusMinutesTimeValue = Int(focusMinutesLabel.text!)!
         focusMinutesLabel.text = String(focusMinutesTimeValue - 1)
         focusMinutesTimeValue -= 1
@@ -128,6 +115,26 @@ class ViewController: UIViewController {
             focusMinutesLabel.text = "0\(focusMinutesTimeValue)"
             if focusMinutesTimeValue == -1 {
                 focusMinutesLabel.text = "00"
+            }
+        }
+    }
+    
+    //MARK: - Short Minutes Timer Set
+    @objc func shortMinutesTimerStart(){
+        focusMinutesLabel.isHidden = true
+        shortMinutesLabel.isHidden = false
+        var shortTimeValue = Int(shortMinutesLabel.text!)!
+        secondsLabel.text = "09"
+        shortMinutesLabel.text = String(shortTimeValue)
+        shortTimeValue -= 1
+        shortMinutesLabel.text = String(shortTimeValue)
+        
+        if ( shortTimeValue < 10){
+            shortMinutesLabel.text = "0\(shortTimeValue)"
+            if shortTimeValue == -1 {
+                shortMinutesLabel.text = "00"
+                focusMinutesLabel.isHidden = false
+                shortMinutesLabel.isHidden = true
             }
         }
     }
@@ -153,8 +160,18 @@ class ViewController: UIViewController {
             shortMinutesLabel.text = String(shortTimeValue)
             
             if (shortTimeValue == 0 && secondsTimeValue == 00){
-                // sayac ekle
-                done()
+                focusMinutesLabel.isHidden = false
+                shortMinutesLabel.isHidden = true
+                counter += 1
+                print("Cycle Counter : \(counter)")
+                if (counter == 1 || counter == 2 || counter == 3){
+                    focusMinutesTimerStart()
+                    shortMinutesTimerStart()
+                    print("Dongu yeniden basladi.")
+                }
+                if (counter == 4 ){
+                    done()
+                }
             }
         }
         //MARK: - Label 0'dan kucuk kontrolu.
@@ -179,13 +196,15 @@ class ViewController: UIViewController {
         
         focusMinutesLabel.text = "25" // Kontrol et ikisini de
         shortMinutesLabel.text = "25"
+        print("Done -> Cycle Counter : \(counter)")
+
+        // Dongu burda bitiyor.
     }
     
     @objc func pauseButtonActions(){
         focusMinutesTimer.invalidate()
         secondsTimer.invalidate()
         shortMinutesTimer.invalidate()
-//        longMinutesTimer.invalidate()
         
         if pauseMu == true {
             pauseButton.setImage(UIImage(systemName: "play.fill"), for: .normal)
@@ -218,12 +237,10 @@ class ViewController: UIViewController {
                 
                 self.focusMinutesLabel.isHidden = false
                 self.shortMinutesLabel.isHidden = true
-//                self.longMinutesLabel.isHidden = true
                 
                 self.focusMinutesTimer.invalidate()
                 self.secondsTimer.invalidate()
                 self.shortMinutesTimer.invalidate()
-//                self.longMinutesTimer.invalidate()
                 
                 self.focusMinutesLabel.text = "25"
                 self.secondsLabel.text = "00"
