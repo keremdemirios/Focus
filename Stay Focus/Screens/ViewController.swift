@@ -165,8 +165,6 @@ class ViewController: UIViewController {
                 counter += 1
                 print("Cycle Counter : \(counter)")
                 if (counter == 1 || counter == 2 || counter == 3){
-                    focusMinutesTimerStart()
-                    shortMinutesTimerStart()
                     print("Dongu yeniden basladi.")
                 }
                 if (counter == 4 ){
@@ -195,7 +193,7 @@ class ViewController: UIViewController {
         breakView.isHidden = true
         
         focusMinutesLabel.text = "25" // Kontrol et ikisini de
-        shortMinutesLabel.text = "25"
+        shortMinutesLabel.text = "05"
         print("Done -> Cycle Counter : \(counter)")
 
         // Dongu burda bitiyor.
